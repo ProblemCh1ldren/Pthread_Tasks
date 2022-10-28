@@ -7,6 +7,7 @@
 #include<pthread.h>
 #include<math.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 //Сумма делителей
 long long int numDivisors = 0;
