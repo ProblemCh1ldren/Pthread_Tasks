@@ -8,30 +8,32 @@
 #include <math.h>
 #include <unistd.h>
 
-long int numDivisors = 0;
+long long int numDivisors = 0;
 
 int main(int argc, char* argv[]) {
-  if (argc != 3)
-  {
-    printf("Введите левую и правую границу!");
-  }
-  for (long int i = atoi(argv[1]); i <= atoi(argv[2]); i++)
+    if (argc != 3)
     {
-      for (long int j = 1; j <= sqrt(i); j++)
+        printf("Введите левую и правую границу!");
+    }
+    long int p = atoi(argv[1]);
+    long int q = atoi(argv[2]);
+    for (long int i = p; i <= q; i++)
+    {
+        for (long int j = 1; j <= sqrt(i); j++)
         {
-          if (!(i % j))
+            if (!(i % j))
             {
-              if (j != i/j)
+                if (j != i/j)
                 {
-                  numDivisors += 2;
+                    numDivisors += 2;
                 }
                 else
                 {
-                  numDivisors++;
+                    numDivisors++;
                 }
             }
         }
     }
-  printf("%ld", numDivisors);
-  return 0;
+    printf("%lld", numDivisors);
+    return 0;
 }
