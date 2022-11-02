@@ -1,5 +1,5 @@
-//Ввести два числа - левую и правую границу.
 //Задача - Посчитать все делители каждого числа и найти сумму всех делителей в данном интервале.
+//Интервалы берутся из файла, созданного программой "filecreate".
 //Вариант задачи с потоками, которые динамически выделаются с учетом количества ваших ядер.
 
 
@@ -8,72 +8,77 @@
 #include<math.h>
 #include <unistd.h>
 
+#define filename "intervals.txt"
+
 //Сумма делителей
-long int numDivisors = 0;
+long long int numDivisors = 0;
 pthread_mutex_t mutex;
 
 //Структура для потоковой функции
-struct interval_t
+typedef struct
 {
-  long int start;
-  long int end;
-};
+    long int start;
+    long int end;
+    int flag;//Шаг
+} interval_t;
 
 //Потоковая функция
 void* pthread_job(void* interval)
 {
-  struct interval_t* temp = (struct interval_t*) interval;
-  long int cores = sysconf(_SC_NPROCESSORS_CONF);
-  //Цикл нахождения делителей с шагом в количество ядер.
-  for (long int i = temp -> start; i <= temp -> end; i+= cores)
+    interval_t* temp = (interval_t*) interval;
+    long int cores = sysconf(_SC_NPROCESSORS_CONF);
+    //Цикл нахождения делителей с шагом в количество ядер.
+    for (long int i = (temp -> start + temp -> flag); i <= temp -> end; i+= cores)
     {
-      for (long int j = 1; j <= sqrt(i); j++)
-       {
-         if (!(i % j))
-          {
-            pthread_mutex_lock(&mutex);
-            if (j != i/j)
-              {
-                numDivisors += 2;
-              }
-            else
-              {
-                numDivisors++;
-              }
-            pthread_mutex_unlock(&mutex);
-          }
-      }
+        for (long int j = 1; j <= sqrt(i); j++)
+        {
+            if (!(i % j))
+            {
+                pthread_mutex_lock(&mutex);
+                if (j != i/j)
+                {
+                    numDivisors += 2;
+                }
+                else
+                {
+                    numDivisors++;
+                }
+                pthread_mutex_unlock(&mutex);
+            }
+        }
     }
-  return NULL;
- }
+    return NULL;
+}
 //Основная программа.
 int main(int argc, char* argv[])
 {
-  if (argc != 3)
-  {
-    printf("Введите левую и правую границу интервала\n");
-    return -1;
-  }
+  FILE* fp;
+  fp = fopen(filename , "r");
   pthread_t *t;
-  struct interval_t* ThreadsStructs;
-  //Количество ядер компьютера, по совместительству количество потоков.
+  interval_t* ThreadsStructs;
   long int cores = sysconf(_SC_NPROCESSORS_CONF);
+  int lines = 0;
+  while(!feof(fp))
+  {
+    if (fgetc(fp) == '\n')
+    ++lines;
+  }
   pthread_mutex_init(&mutex, NULL);
   //Выделение памяти для количества потоков, ориентируется на количество ядер.
-  t = (pthread_t *) malloc(cores * sizeof(pthread_t));
-  ThreadsStructs = (struct interval_t *) malloc(cores * sizeof(struct interval_t));
-  for (int i=0; i < cores; i++)
+  t = (pthread_t *) malloc(lines * sizeof(pthread_t));
+  ThreadsStructs = (interval_t *) malloc(lines * sizeof(interval_t));
+  rewind(fp);
+  for (int i = 0; i < lines; ++i)
     {
-      ThreadsStructs[i].start = atoi(argv[1]) + i;//atoi-из строки в число.
-      ThreadsStructs[i].end = atoi(argv[2]);
-      pthread_create(&t[i],NULL,pthread_job,&ThreadsStructs[i]);
+      fscanf(fp,"%ld %ld", &ThreadsStructs[i].start, &ThreadsStructs[i].end);
+      pthread_create(&t[i], NULL, pthread_job, &ThreadsStructs[i]);
     }
-  for(int i=0; i < cores ; i++)
+  for(int j = 0; j < lines ; j++)
     {
-      pthread_join(t[i],NULL);
+      pthread_join(t[j], NULL);
     }
-  pthread_mutex_destroy(&mutex);
-  printf("Количесто делителей чисел из интервала: %ld\n",numDivisors);
+  pthread_mutex_destroy(&mutex); 
+  printf("Количесто делителей чисел из интервала: %lld\n",numDivisors);
   printf("Количество ядер компьютера: %ld\n",cores);
   return 0;
-  }
+}
