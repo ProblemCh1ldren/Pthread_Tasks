@@ -80,5 +80,8 @@ int main(int argc, char* argv[])
   pthread_mutex_destroy(&mutex); 
   printf("Количесто делителей чисел из интервала: %lld\n",numDivisors);
   printf("Количество ядер компьютера: %ld\n",cores);
+  free(t);
+  free(ThreadsStructs);
+  fclose(fp);
   return 0;
 }
