@@ -1,5 +1,7 @@
-/* Программа считает сумму делителей всех чисел в интервалах, которые генерирует программа interval_generator
-Ипользуются несколько потоков */
+//Сервер решающий задачу с интервалами с помощью потоков.
+//Задача - Посчитать все делители каждого числа и найти сумму всех делителей в данном интервале.
+//Вариант задачи с потоками, которые динамически выделаются с учетом количества ваших ядер.
+
 
 #include <pthread.h>
 #include <math.h>
@@ -14,10 +16,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-long long int numDivisors = 0; // общие данные для потоков  - переменная для подсчета суммы делителей
+long long int numDivisors
+    = 0; // общие данные для потоков  - переменная для подсчета суммы делителей
 pthread_mutex_t mutex;
 
-typedef struct interval {
+typedef struct interval
+{
     long int start;
     long int end;
 } interval_t;
@@ -25,30 +29,30 @@ typedef struct interval {
 //Потоковая функция
 void* pthread_job(void* interval)
 {
-  interval_t* temp = (struct interval_t*) interval;
-  long int cores = sysconf(_SC_NPROCESSORS_CONF);
-  //Цикл нахождения делителей с шагом в количество ядер.
-  for (long int i = temp -> start; i <= temp -> end; i+= cores)
+    interval_t* temp = (struct interval_t*)interval;
+    long int cores = sysconf(_SC_NPROCESSORS_CONF);
+    //Цикл нахождения делителей с шагом в количество ядер.
+    for (long int i = temp->start; i <= temp->end; i += cores)
     {
-      for (long int j = 1; j <= sqrt(i); j++)
-       {
-         if (!(i % j))
-          {
-            pthread_mutex_lock(&mutex);
-            if (j != i/j)
-              {
-                numDivisors += 2;
-              }
-            else
-              {
-                numDivisors++;
-              }
-            pthread_mutex_unlock(&mutex);
-          }
-      }
+        for (long int j = 1; j <= sqrt(i); j++)
+        {
+            if (!(i % j))
+            {
+                pthread_mutex_lock(&mutex);
+                if (j != i / j)
+                {
+                    numDivisors += 2;
+                }
+                else
+                {
+                    numDivisors++;
+                }
+                pthread_mutex_unlock(&mutex);
+            }
+        }
     }
-  return NULL;
- }
+    return NULL;
+}
 
 int main(int argc, char* argv[])
 {
@@ -59,7 +63,8 @@ int main(int argc, char* argv[])
     //структуры для размещения полных адресов сервера и клиента
     struct sockaddr_in servaddr, cliaddr;
     //создаем TCP-сокет
-    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    {
         perror(NULL);
         close(sockfd);
         exit(1);
@@ -72,14 +77,16 @@ int main(int argc, char* argv[])
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
     //связываем созданный сокет с адресом (3 параметр - размер структуры в байтах)
-    if (bind(sockfd, (struct sockaddr*)&servaddr, sizeof(servaddr)) < 0) {
+    if (bind(sockfd, (struct sockaddr*)&servaddr, sizeof(servaddr)) < 0)
+    {
         perror(NULL);
         close(sockfd);
         exit(1);
     }
     //переводим сокет в пассивное состояние
     // второй параметр - кол-во одновременных подключений
-    if (listen(sockfd, 5) < 0) {
+    if (listen(sockfd, 5) < 0)
+    {
         perror(NULL);
         close(sockfd);
         exit(1);
@@ -88,7 +95,8 @@ int main(int argc, char* argv[])
     clilen = sizeof(cliaddr);
     // принимаем соединение на сокете
     // при нормальном завершении в структуре будет адрес, а в clilen - фактическая длина
-    if ((newsockfd = accept(sockfd, (struct sockaddr*)&cliaddr, &clilen)) < 0) {
+    if ((newsockfd = accept(sockfd, (struct sockaddr*)&cliaddr, &clilen)) < 0)
+    {
         perror(NULL);
         close(sockfd);
         exit(1);
@@ -106,10 +114,12 @@ int main(int argc, char* argv[])
     pthread_mutex_init(&mutex, NULL);
 
     //считываем интервалы из сокета и создаем потоки
-    for (int i = 0; i < cores; ++i) {
+    for (int i = 0; i < cores; ++i)
+    {
         n = read(newsockfd, &intervals[i], sizeof(intervals[i]));
         //если при чтении возникла ошибка - завершаем работу
-        if (n < 0) {
+        if (n < 0)
+        {
             perror(NULL);
             close(sockfd);
             close(newsockfd);
@@ -123,7 +133,7 @@ int main(int argc, char* argv[])
 
     pthread_mutex_destroy(&mutex);
     printf("Count of divisors = %lld\n", numDivisors);
-  
+
     free(p);
     free(intervals);
     close(sockfd);
