@@ -16,8 +16,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-long long int numDivisors
-    = 0; // общие данные для потоков  - переменная для подсчета суммы делителей
+long long int numDivisors = 0; // общие данные для потоков  - переменная для подсчета суммы делителей
 pthread_mutex_t mutex;
 
 typedef struct interval
