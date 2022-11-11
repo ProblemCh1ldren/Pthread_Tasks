@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
     for (int i = 0; i < cores; i++)
     {
         PthreadStructs[i].start = atoi(argv[2]) + i;
-        PthreadStructs[i].start = atoi(argv[3]);
+        PthreadStructs[i].end = atoi(argv[3]);
         if ((n = write(sockfd, &PthreadStructs[i], sizeof(PthreadStructs[i]))) < 0)
         {
             perror(NULL);
