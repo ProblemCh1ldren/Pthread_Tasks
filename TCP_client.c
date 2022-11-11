@@ -62,8 +62,6 @@ int main(int argc, char* argv[])
     interval_t* PthreadStructs;
     PthreadStructs = (interval_t*)malloc(cores * sizeof(interval_t));
 
-    // write(sockfd, &count_of_cores, sizeof(count_of_cores));
-    //если левая граница = 1
     for (int i = 0; i < cores; i++)
     {
         PthreadStructs[i].start = atoi(argv[2]) + i;
